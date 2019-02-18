@@ -71,28 +71,30 @@ def main
     return
   end
 
-  File.write(PID_FILE, $$.to_s)
-  gracefully = false
+  begin
+    File.write(PID_FILE, $$.to_s)
+    gracefully = false
 
-  commits = fetch_commits_to_build
-  if !commits.empty?
-    msg = "#{ commits.first }..#{ commits.last } (#{ commits.size } commits)"
+    commits = fetch_commits_to_build
+    if !commits.empty?
+      msg = "#{ commits.first }..#{ commits.last } (#{ commits.size } commits)"
 
-    log "start: #{ msg }"
+      log "start: #{ msg }"
 
-    commits.each do |commit|
-      build_and_push(commit)
+      commits.each do |commit|
+        build_and_push(commit)
+      end
+
+      log "end: #{ msg }"
     end
 
-    log "end: #{ msg }"
+    gracefully = true
+
+  ensure
+    log "abort: #{ $! }" if !gracefully
+
+    File.delete(PID_FILE)
   end
-
-  gracefully = true
-
-ensure
-  log "abort: #{ $! }" if !gracefully
-
-  File.delete(PID_FILE)
 end
 
 main
