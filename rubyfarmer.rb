@@ -12,6 +12,20 @@ LOG_DIR = File.join(__dir__, "logs")
 RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
 DOCKER_REPO_NAME = "rubylang/rubyfarm"
 DOCKER_REPO_URL = "https://registry.hub.docker.com/v1/repositories/rubylang/rubyfarm/tags"
+SLACK_WEBHOOK_URL = ENV["SLACK_WEBHOOK_URL"]
+
+def log(msg)
+  if SLACK_WEBHOOK_URL
+    params = { text: msg }
+    Net::HTTP.post(
+      URI.parse(SLACK_WEBHOOK_URL),
+      JSON.generate(params),
+      "Content-Type" => "application/json"
+    )
+  else
+    puts "msg"
+  end
+end
 
 def fetch_all_commits
   unless File.exist?(BARE_REPO_DIR)
@@ -35,7 +49,7 @@ def fetch_commits_to_build
 end
 
 def build_and_push(commit)
-  puts "build: #{ commit }"
+  log "build: #{ commit }"
   tag = "#{ DOCKER_REPO_NAME }:#{ commit }"
   Dir.mkdir(LOG_DIR) unless File.exist?(LOG_DIR)
   open(File.join(LOG_DIR, "#{ commit }.log"), "w") do |log|
@@ -43,13 +57,31 @@ def build_and_push(commit)
       system("docker", "tag", tag, "#{ DOCKER_REPO_NAME }:latest", out: log)
       system("docker", "push", tag, out: log)
       system("docker", "push", "#{ DOCKER_REPO_NAME }:latest", out: log)
-      puts "pushed: #{ commit }"
+      log "pushed: #{ commit }"
     else
-      puts "failed to build: #{ commit }"
+      log "failed to build: #{ commit }"
     end
   end
 end
 
-fetch_commits_to_build.each do |commit|
-  build_and_push(commit)
+def main
+  commits = fetch_commits_to_build
+  if !commits.empty?
+    msg = "#{ commits.first }..#{ commits.last } (#{ commits.size } commits)"
+
+    log "start: #{ msg }"
+    gracefully = false
+    at_exit do
+      log "abort: #{ msg }" if !gracefully
+    end
+
+    commits.each do |commit|
+      build_and_push(commit)
+    end
+
+    log "end: #{ msg }"
+    gracefully = true
+  end
 end
+
+main
