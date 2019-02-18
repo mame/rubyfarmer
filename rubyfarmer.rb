@@ -33,6 +33,7 @@ def fetch_all_commits
   unless File.exist?(BARE_REPO_DIR)
     system("git", "clone", "--bare", RUBY_REPO_URL, BARE_REPO_DIR)
   end
+  system("git", "--git-dir", BARE_REPO_DIR, "fetch", "origin", "trunk:trunk")
   list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", FIRST_COMMIT + "..HEAD")
   list.lines.map {|commit| commit.chomp }
 end
