@@ -25,7 +25,7 @@ def log(msg)
       "Content-Type" => "application/json"
     )
   else
-    puts "msg"
+    puts msg
   end
 end
 
