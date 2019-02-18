@@ -10,7 +10,7 @@ FIRST_COMMIT = "7c1b30a602ab109d8d5388d7dfb3c5b180ba24e1" # r57410
 BARE_REPO_DIR = File.join(__dir__, "ruby.git")
 LOG_DIR = File.join(__dir__, "logs")
 RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
-DOCKER_REPO_NAME = "mametter/rubyfarm2"
+DOCKER_REPO_NAME = "rubylang/rubyfarm"
 DOCKER_REPO_URL = "https://registry.hub.docker.com/v1/repositories/rubylang/rubyfarm/tags"
 
 def fetch_all_commits
