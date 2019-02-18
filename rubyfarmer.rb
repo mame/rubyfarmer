@@ -13,6 +13,7 @@ RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
 DOCKER_REPO_NAME = "rubylang/rubyfarm"
 DOCKER_REPO_URL = "https://registry.hub.docker.com/v1/repositories/rubylang/rubyfarm/tags"
 SLACK_WEBHOOK_URL = ENV["SLACK_WEBHOOK_URL"]
+PID_FILE = File.join(__dir__, "rubyfarmer.pid")
 
 def log(msg)
   if SLACK_WEBHOOK_URL
@@ -65,23 +66,33 @@ def build_and_push(commit)
 end
 
 def main
+  if File.exist?(PID_FILE)
+    log "(still running)"
+    return
+  end
+
+  File.write(PID_FILE, $$.to_s)
+  gracefully = false
+
   commits = fetch_commits_to_build
   if !commits.empty?
     msg = "#{ commits.first }..#{ commits.last } (#{ commits.size } commits)"
 
     log "start: #{ msg }"
-    gracefully = false
-    at_exit do
-      log "abort: #{ msg }" if !gracefully
-    end
 
     commits.each do |commit|
       build_and_push(commit)
     end
 
     log "end: #{ msg }"
-    gracefully = true
   end
+
+  gracefully = true
+
+ensure
+  log "abort: #{ $! }" if !gracefully
+
+  File.delete(PID_FILE)
 end
 
 main
