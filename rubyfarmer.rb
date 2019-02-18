@@ -3,6 +3,7 @@
 require "open3"
 require "open-uri"
 require "json"
+require "net/https"
 
 Dir.chdir(__dir__)
 
