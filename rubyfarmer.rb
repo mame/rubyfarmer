@@ -29,15 +29,6 @@ def log(msg)
   end
 end
 
-def fetch_all_commits
-  unless File.exist?(BARE_REPO_DIR)
-    system("git", "clone", "--bare", RUBY_REPO_URL, BARE_REPO_DIR)
-  end
-  system("git", "--git-dir", BARE_REPO_DIR, "fetch", "origin", "trunk:trunk")
-  list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", FIRST_COMMIT + "..HEAD")
-  list.lines.map {|commit| commit.chomp }
-end
-
 def fetch_built_commits
   json = open(DOCKER_REPO_URL) {|f| f.read }
   built = {}
@@ -46,9 +37,24 @@ def fetch_built_commits
 end
 
 def fetch_commits_to_build
-  all = fetch_all_commits
   built = fetch_built_commits
-  all.take_while {|commit| !built[commit] }.reverse
+
+  unless File.exist?(BARE_REPO_DIR)
+    system("git", "clone", "--bare", RUBY_REPO_URL, BARE_REPO_DIR)
+  end
+  system("git", "--git-dir", BARE_REPO_DIR, "fetch", "origin", "trunk:trunk")
+
+  commits = []
+  list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", "--first-parent", FIRST_COMMIT + "..HEAD")
+  list.lines.map {|commit| commit.chomp }.each_cons(2) do |new, old|
+    list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", old + ".." + new)
+    list.lines.each do |commit|
+      commit = commit.chomp
+      return commits.reverse if built[commit]
+      commits << commit
+    end
+  end
+  commits.reverse
 end
 
 def build_and_push(commit)
