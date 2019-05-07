@@ -42,7 +42,7 @@ def fetch_commits_to_build
   unless File.exist?(BARE_REPO_DIR)
     system("git", "clone", "--bare", RUBY_REPO_URL, BARE_REPO_DIR)
   end
-  system("git", "--git-dir", BARE_REPO_DIR, "fetch", "origin", "trunk:trunk")
+  system("git", "--git-dir", BARE_REPO_DIR, "fetch", "-f", "origin", "trunk:trunk")
 
   commits = []
   list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", "--first-parent", FIRST_COMMIT + "..HEAD")
