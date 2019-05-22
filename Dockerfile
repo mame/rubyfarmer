@@ -1,6 +1,6 @@
 FROM mametter/ruby-build-env:latest AS build
 COPY ruby.git ruby.git
-ARG COMMIT=${COMMIT:-trunk}
+ARG COMMIT=${COMMIT:-master}
 RUN git clone ruby.git && \
   cd ruby && \
   git checkout ${COMMIT} && \
