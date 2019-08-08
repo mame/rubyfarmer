@@ -46,7 +46,7 @@ def fetch_commits_to_build
 
   # dag: commit -> [parent_commit]
   dag = {}
-  list, = Open3.capture2("git", "log", "--pretty=%H %P", FIRST_COMMIT + "..HEAD")
+  list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "log", "--pretty=%H %P", FIRST_COMMIT + "..master")
   head = nil
   list.each_line do |line|
     commit, *parents = line.split
