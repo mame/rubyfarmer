@@ -44,17 +44,35 @@ def fetch_commits_to_build
   end
   system("git", "--git-dir", BARE_REPO_DIR, "fetch", "-f", "origin", "master:master")
 
-  commits = []
-  list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", "--first-parent", FIRST_COMMIT + "..HEAD")
-  list.lines.map {|commit| commit.chomp }.each_cons(2) do |new, old|
-    list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "rev-list", old + ".." + new)
-    list.lines.each do |commit|
-      commit = commit.chomp
-      return commits.reverse if built[commit]
-      commits << commit
+  # dag: commit -> [parent_commit]
+  dag = {}
+  list, = Open3.capture2("git", "--git-dir", BARE_REPO_DIR, "log", "--pretty=%H %P", FIRST_COMMIT + "..master")
+  head = nil
+  list.each_line do |line|
+    commit, *parents = line.split
+    dag[commit] = parents
+    head ||= commit
+  end
+
+  # DFS and topological sort
+  stack = [[:visit, head]]
+  to_build = []
+  visited = built.dup
+  until stack.empty?
+    type, commit = stack.pop
+    if type == :visit
+      next if visited[commit]
+      visited[commit] = true
+      stack << [:build, commit]
+      dag[commit].each do |parent|
+        stack << [:visit, parent]
+      end
+    else
+      to_build << commit
     end
   end
-  commits.reverse
+
+  to_build
 end
 
 def build_and_push(commit)
