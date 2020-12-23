@@ -13,6 +13,7 @@ LOG_DIR = File.join(__dir__, "logs")
 RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
 DOCKER_REPO_NAME = "rubylang/rubyfarm"
 DOCKER_REPO_URL = "https://registry.hub.docker.com/v1/repositories/rubylang/rubyfarm/tags"
+LOCAL_DOCKER_REPO_NAME = "localhost:5000/rubyfarm"
 SLACK_WEBHOOK_URL = ENV["SLACK_WEBHOOK_URL"]
 PID_FILE = File.join(__dir__, "rubyfarmer.pid")
 
@@ -78,12 +79,17 @@ end
 def build_and_push(commit)
   log "build: #{ commit }"
   tag = "#{ DOCKER_REPO_NAME }:#{ commit }"
+  local_tag = "#{ LOCAL_DOCKER_REPO_NAME }:#{ commit }"
   Dir.mkdir(LOG_DIR) unless File.exist?(LOG_DIR)
   open(File.join(LOG_DIR, "#{ commit }.log"), "w") do |log|
     if system("docker", "build", "--no-cache", "--build-arg", "COMMIT=#{ commit }", "-t", tag, ".", out: log)
+      system("docker", "tag", tag, local_tag, out: log)
       system("docker", "tag", tag, "#{ DOCKER_REPO_NAME }:latest", out: log)
+      system("docker", "tag", tag, "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
       system("docker", "push", tag, out: log)
+      system("docker", "push", local_tag, out: log)
       system("docker", "push", "#{ DOCKER_REPO_NAME }:latest", out: log)
+      system("docker", "push", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
       log "pushed: #{ commit }"
     else
       log "failed to build: #{ commit }"
