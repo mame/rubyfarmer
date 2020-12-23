@@ -30,7 +30,7 @@ def log(msg)
 end
 
 def fetch_built_commits
-  json = open(DOCKER_REPO_URL) {|f| f.read }
+  json = URI.open(DOCKER_REPO_URL) {|f| f.read }
   built = {}
   JSON.parse(json).each {|json| built[json["name"]] = true }
   built
