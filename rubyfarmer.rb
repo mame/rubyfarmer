@@ -82,7 +82,7 @@ def build_and_push(commit)
   local_tag = "#{ LOCAL_DOCKER_REPO_NAME }:#{ commit }"
   Dir.mkdir(LOG_DIR) unless File.exist?(LOG_DIR)
   open(File.join(LOG_DIR, "#{ commit }.log"), "w") do |log|
-    if system("docker", "build", "--no-cache", "--build-arg", "COMMIT=#{ commit }", "-t", tag, ".", out: log)
+    if system("docker", "build", "--force-rm", "--no-cache", "--build-arg", "COMMIT=#{ commit }", "-t", tag, ".", out: log)
       system("docker", "tag", tag, local_tag, out: log)
       system("docker", "tag", tag, "#{ DOCKER_REPO_NAME }:latest", out: log)
       system("docker", "tag", tag, "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
