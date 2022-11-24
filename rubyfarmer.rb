@@ -83,13 +83,24 @@ def fetch_commits_to_build
   to_build
 end
 
+SIGCHLD_LOG = []
+trap(:CHLD) { SIGCHLD_LOG << true }
+def timeout_system(...)
+  SIGCHLD_LOG.clear
+  pid = Process.spawn(...)
+  t = Time.now
+  sleep 1 until SIGCHLD_LOG.size >= 1 || Time.now - t > 60 * 60
+  Process.kill(:QUIT, pid)
+  Process.waitpid(pid)
+end
+
 def build_and_push(commit)
   log "build: #{ commit }"
   tag = "#{ DOCKER_REPO_NAME }:#{ commit }"
   local_tag = "#{ LOCAL_DOCKER_REPO_NAME }:#{ commit }"
   Dir.mkdir(LOG_DIR) unless File.exist?(LOG_DIR)
   open(File.join(LOG_DIR, "#{ commit }.log"), "w") do |log|
-    if system("docker", "build", "--force-rm", "--no-cache", "--build-arg", "COMMIT=#{ commit }", "-t", tag, ".", out: log)
+    if timeout_system("docker", "build", "--force-rm", "--no-cache", "--build-arg", "COMMIT=#{ commit }", "-t", tag, ".", out: log)
       system("docker", "tag", tag, local_tag, out: log)
       system("docker", "tag", tag, "#{ DOCKER_REPO_NAME }:latest", out: log)
       system("docker", "tag", tag, "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
