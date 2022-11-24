@@ -12,7 +12,7 @@ BARE_REPO_DIR = File.join(__dir__, "ruby.git")
 LOG_DIR = File.join(__dir__, "logs")
 RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
 DOCKER_REPO_NAME = "rubylang/rubyfarm"
-DOCKER_REPO_URL = "https://registry.hub.docker.com/v1/repositories/rubylang/rubyfarm/tags"
+DOCKER_REPO_URL = "https://registry.hub.docker.com/v2/repositories/rubylang/rubyfarm/tags"
 LOCAL_DOCKER_REPO_NAME = "localhost:5000/rubyfarm"
 SLACK_WEBHOOK_URL = ENV["SLACK_WEBHOOK_URL"]
 PID_FILE = File.join(__dir__, "rubyfarmer.pid")
@@ -31,9 +31,16 @@ def log(msg)
 end
 
 def fetch_built_commits
-  json = URI.open(DOCKER_REPO_URL) {|f| f.read }
   built = {}
-  JSON.parse(json).each {|json| built[json["name"]] = true }
+  url = DOCKER_REPO_URL + "?page_size=100"
+
+  while url
+    json = URI.open(url) {|f| f.read }
+    json = JSON.parse(json)
+    json["results"].each {|json| built[json["name"]] = true }
+    url = json["next"]
+  end
+
   built
 end
 
