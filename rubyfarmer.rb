@@ -108,6 +108,8 @@ def build_and_push(commit)
       system("docker", "push", local_tag, out: log)
       system("docker", "push", "#{ DOCKER_REPO_NAME }:latest", out: log)
       system("docker", "push", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
+      system("docker", "rmi", tag, out: log)
+      system("docker", "rmi", local_tag, out: log)
       log "pushed: #{ commit }"
     else
       log "failed to build: #{ commit }"
