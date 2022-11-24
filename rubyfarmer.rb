@@ -13,7 +13,7 @@ LOG_DIR = File.join(__dir__, "logs")
 RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
 DOCKER_REPO_NAME = "rubylang/rubyfarm"
 DOCKER_REPO_URL = "https://registry.hub.docker.com/v2/repositories/rubylang/rubyfarm/tags"
-LOCAL_DOCKER_REPO_NAME = "localhost:5000/rubyfarm"
+LOCAL_DOCKER_REPO_NAME = ENV["RUBYFARM_LOCAL_DOCKER_REPO"] || "localhost:5000/rubyfarm"
 SLACK_WEBHOOK_URL = ENV["SLACK_WEBHOOK_URL"]
 PID_FILE = File.join(__dir__, "rubyfarmer.pid")
 
