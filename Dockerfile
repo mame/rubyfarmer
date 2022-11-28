@@ -1,4 +1,5 @@
 FROM mametter/ruby-build-env:latest AS build
+LABEL stage=rubyfarmer-builder
 COPY ruby.git ruby.git
 ARG COMMIT=${COMMIT:-master}
 RUN git clone ruby.git && \

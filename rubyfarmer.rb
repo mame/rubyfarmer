@@ -110,6 +110,7 @@ def build_and_push(commit)
       system("docker", "push", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
       system("docker", "rmi", tag, out: log)
       system("docker", "rmi", local_tag, out: log)
+      system("docker", "image", "prune", "--filter", "label=rubyfarmer-builder")
       log "pushed: #{ commit }"
     else
       log "failed to build: #{ commit }"
