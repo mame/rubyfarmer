@@ -94,9 +94,9 @@ def timeout_system(...)
   Process.waitpid(pid)
 end
 
-def log_system(*cmd, out: log)
+def log_system(*cmd, out: nil)
   log.push "cmd: %p" % cmd
-  system(*cmd, out: log)
+  system(*cmd, out: nil)
 end
 
 def build_and_push(commit)
@@ -117,7 +117,7 @@ def build_and_push(commit)
       log_system("docker", "push", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
       log_system("docker", "rmi", tag, out: log)
       log_system("docker", "rmi", local_tag, out: log)
-      log_system("docker", "image", "prune", "--filter", "label=stage=rubyfarmer-builder", "-f")
+      log_system("docker", "image", "prune", "--filter", "label=stage=rubyfarmer-builder", "-f", out: log)
       log "pushed: #{ commit }"
     else
       log "failed to build: #{ commit }"
