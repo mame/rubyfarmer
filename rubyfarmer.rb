@@ -95,7 +95,7 @@ def timeout_system(...)
 end
 
 def log_system(*cmd, out: nil)
-  log.push "cmd: %p" % cmd
+  out.push "cmd: %p" % cmd
   system(*cmd, out: nil)
 end
 
