@@ -94,9 +94,9 @@ def timeout_system(...)
   Process.waitpid(pid)
 end
 
-def log_system(*cmd, out: nil)
+def log_system(*cmd, out:)
   out.puts "cmd: %p" % cmd
-  system(*cmd, out: nil)
+  system(*cmd, out: out)
 end
 
 def build_and_push(commit)
