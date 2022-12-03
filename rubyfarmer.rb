@@ -94,6 +94,11 @@ def timeout_system(...)
   Process.waitpid(pid)
 end
 
+def log_system(*cmd, out: log)
+  log.push "cmd: %p" % cmd
+  system(*cmd, out: log)
+end
+
 def build_and_push(commit)
   log "build: #{ commit }"
   tag = "#{ DOCKER_REPO_NAME }:#{ commit }"
@@ -101,18 +106,18 @@ def build_and_push(commit)
   Dir.mkdir(LOG_DIR) unless File.exist?(LOG_DIR)
   open(File.join(LOG_DIR, "#{ commit }.log"), "w") do |log|
     if timeout_system("docker", "build", "--force-rm", "--no-cache", "--build-arg", "COMMIT=#{ commit }", "-t", tag, ".", out: log)
-      system("docker", "tag", tag, local_tag, out: log)
-      system("docker", "rmi", "#{ DOCKER_REPO_NAME }:latest", out: log)
-      system("docker", "tag", tag, "#{ DOCKER_REPO_NAME }:latest", out: log)
-      system("docker", "rmi", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
-      system("docker", "tag", tag, "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
-      system("docker", "push", tag, out: log)
-      system("docker", "push", local_tag, out: log)
-      system("docker", "push", "#{ DOCKER_REPO_NAME }:latest", out: log)
-      system("docker", "push", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
-      system("docker", "rmi", tag, out: log)
-      system("docker", "rmi", local_tag, out: log)
-      system("docker", "image", "prune", "--filter", "label=stage=rubyfarmer-builder", "-f")
+      log_system("docker", "tag", tag, local_tag, out: log)
+      log_system("docker", "rmi", "#{ DOCKER_REPO_NAME }:latest", out: log)
+      log_system("docker", "tag", tag, "#{ DOCKER_REPO_NAME }:latest", out: log)
+      log_system("docker", "rmi", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
+      log_system("docker", "tag", tag, "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
+      log_system("docker", "push", tag, out: log)
+      log_system("docker", "push", local_tag, out: log)
+      log_system("docker", "push", "#{ DOCKER_REPO_NAME }:latest", out: log)
+      log_system("docker", "push", "#{ LOCAL_DOCKER_REPO_NAME }:latest", out: log)
+      log_system("docker", "rmi", tag, out: log)
+      log_system("docker", "rmi", local_tag, out: log)
+      log_system("docker", "image", "prune", "--filter", "label=stage=rubyfarmer-builder", "-f")
       log "pushed: #{ commit }"
     else
       log "failed to build: #{ commit }"
