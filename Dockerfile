@@ -5,7 +5,7 @@ ARG COMMIT=${COMMIT:-master}
 RUN git clone ruby.git && \
   cd ruby && \
   git checkout ${COMMIT} && \
-  autoconf && \
+  ./autogen.sh && \
   ./configure --prefix=/opt/ruby --enable-shared && \
   make && \
   make install
