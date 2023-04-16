@@ -7,7 +7,7 @@ RUN git clone ruby.git && \
   git checkout ${COMMIT} && \
   ./autogen.sh && \
   ./configure --prefix=/opt/ruby --enable-shared && \
-  make up && \
+  make extract-gems && \
   make && \
   make install
 
