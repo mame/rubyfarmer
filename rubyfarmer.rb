@@ -12,7 +12,8 @@ BARE_REPO_DIR = File.join(__dir__, "ruby.git")
 LOG_DIR = File.join(__dir__, "logs")
 RUBY_REPO_URL = "https://github.com/ruby/ruby.git"
 DOCKER_REPO_NAME = "rubylang/rubyfarm"
-DOCKER_REPO_URL = "https://registry.hub.docker.com/v2/repositories/rubylang/rubyfarm/tags"
+DOCKER_REPO_AUTH_URL = "https://auth.docker.io/token?service=registry.docker.io&scope=repository:rubylang/rubyfarm:pull"
+DOCKER_REPO_TAGLIST_URL = "https://registry.hub.docker.com/v2/rubylang/rubyfarm/tags/list"
 LOCAL_DOCKER_REPO_NAME = ENV["RUBYFARM_LOCAL_DOCKER_REPO"] || "localhost:5000/rubyfarm"
 SLACK_WEBHOOK_URL = ENV["SLACK_WEBHOOK_URL"]
 PID_FILE = File.join(__dir__, "rubyfarmer.pid")
@@ -32,14 +33,17 @@ end
 
 def fetch_built_commits
   built = {}
-  url = DOCKER_REPO_URL + "?page_size=100"
 
-  while url
-    json = URI.open(url) {|f| f.read }
-    json = JSON.parse(json)
-    json["results"].each {|json| built[json["name"]] = true }
-    url = json["next"]
-  end
+  json = Net::HTTP.get(URI.parse(DOCKER_REPO_AUTH_URL))
+  json = JSON.parse(json)
+  token = json["token"]
+
+  uri = URI.parse(DOCKER_REPO_TAGLIST_URL)
+  http = Net::HTTP.new(uri.host, uri.port)
+  http.use_ssl = true
+  resp = http.get(uri.path, { "Authorization" => "Bearer #{ token }" })
+  json = resp.body
+  JSON.parse(json)["tags"].each {|name| built[name] = true }
 
   built
 end
